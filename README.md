@@ -24,7 +24,7 @@ This project is a microservice for order management developed using Spring Boot 
 1. Clone the project to your local machine:
 
     ```bash
-    git clone <your-repo-url>
+    git clone git@github.com:canangozde/order-service.git
     ```
 
 2. A valid secret key is already set on the application properties for local testing. If you want to use a new secret key, edit the `application.properties` file and add your JWT secret key and password:

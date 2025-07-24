@@ -1,15 +1,19 @@
 package com.example.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class AuthDto {
-    private String username;
-    private String password;
+public record AuthDto(
+        @Schema(description = "Username of the customer", example = "user")
+        @NotBlank(message = "Username is required")
+        @JsonProperty("username")
+        String username,
+
+        @Schema(description = "Password of the customer", example = "user123")
+        @NotBlank(message = "Password is required")
+        @JsonProperty("password")
+        String password
+) {
 }
+

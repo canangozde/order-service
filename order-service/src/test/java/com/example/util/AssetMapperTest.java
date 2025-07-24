@@ -5,6 +5,7 @@ import com.example.model.Asset;
 import com.example.model.Customer;
 import com.example.response.AssetResponse;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 
@@ -12,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AssetMapperTest {
 
-    private final AssetMapper assetMapper = new AssetMapper();
+    private final AssetMapper assetMapper = Mappers.getMapper(AssetMapper.class);
 
     @Test
     void testFromAsset_ValidAsset() {

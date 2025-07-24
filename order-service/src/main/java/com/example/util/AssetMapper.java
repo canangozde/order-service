@@ -1,22 +1,20 @@
 package com.example.util;
 
 import com.example.model.Asset;
+import com.example.model.Customer;
 import com.example.response.AssetResponse;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
-@Component
-public class AssetMapper {
+@Mapper(componentModel = "spring")
+public interface AssetMapper {
 
-    public AssetResponse fromAsset(Asset asset) {
-        if (asset == null) {
-            return null;
-        }
-        return com.example.response.AssetResponse.builder()
-                .id(asset.getId())
-                .assetName(asset.getAssetName())
-                .size(asset.getSize())
-                .usableSize(asset.getUsableSize())
-                .customerId(asset.getCustomer().getId())
-                .build();
+    @Mapping(target = "customerId", source = "customer", qualifiedByName = "mapCustomerToId")
+    AssetResponse fromAsset(Asset asset);
+
+    @Named("mapCustomerToId")
+    static Long mapCustomerToId(Customer customer) {
+        return customer != null ? customer.getId() : null;
     }
 }

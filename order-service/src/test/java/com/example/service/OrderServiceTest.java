@@ -53,38 +53,51 @@ class OrderServiceTest {
     }
 
     @Test
-    void testGetOrders_AccessDenied() {
+    void testGetOrders_AdminAccessingOthersData_ShouldThrowAccessDenied() {
+        // Given
+        when(authUtil.isAdmin()).thenReturn(true);
         when(authUtil.isAdminOrAccessingOwnData(1L)).thenReturn(false);
+
+        // Then
         assertThrows(AccessDeniedException.class, () ->
-                orderService.getOrders(1L, LocalDateTime.now().minusDays(1), LocalDateTime.now()));
+                orderService.getOrders(1L, LocalDateTime.now().minusDays(1), LocalDateTime.now(),
+                        null, null, null, null, null, null, null));
     }
+
 
     @Test
     void testCreateOrder_BuyOrder_Success() {
-        OrderDto dto = new OrderDto();
-        dto.setCustomerId(1L);
-        dto.setAssetName("BTC");
-        dto.setSide(OrderSide.BUY);
-        dto.setPrice(new BigDecimal("100"));
-        dto.setSize(new BigDecimal("2"));
+        // given
+        OrderDto dto = new OrderDto(
+                1L,
+                "BTC",
+                OrderSide.BUY,
+                new BigDecimal("2"),
+                new BigDecimal("100")
+        );
 
         Asset btcAsset = new Asset();
         btcAsset.setAssetName("BTC");
+
         Asset tryAsset = new Asset();
         tryAsset.setAssetName("TRY");
         tryAsset.setUsableSize(new BigDecimal("500"));
+
         Customer customer = new Customer();
 
+        Order order = new Order();
+        OrderResponse expectedResponse = new OrderResponse();
+
+        // when
         when(authUtil.isAdminOrAccessingOwnData(1L)).thenReturn(true);
         when(assetRepository.findByCustomerIdAndAssetName(1L, "BTC")).thenReturn(Optional.of(btcAsset));
         when(assetRepository.findByCustomerIdAndAssetName(1L, "TRY")).thenReturn(Optional.of(tryAsset));
         when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-
-        Order order = new Order();
         when(orderMapper.toOrder(dto, btcAsset, customer)).thenReturn(order);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
-        when(orderMapper.fromOrder(order)).thenReturn(new OrderResponse());
+        when(orderMapper.fromOrder(order)).thenReturn(expectedResponse);
 
+        // then
         OrderResponse response = orderService.createOrder(dto);
         assertNotNull(response);
     }

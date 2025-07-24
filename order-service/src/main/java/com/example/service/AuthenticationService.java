@@ -33,11 +33,11 @@ public class AuthenticationService {
     @Transactional
     public JwtAuthenticationResponse login(AuthDto request) {
 
-        var user = customerRepository.findByUsername(request.getUsername())
+        var user = customerRepository.findByUsername(request.username())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username or password."));
 
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword(), user.getAuthorities()));
+                new UsernamePasswordAuthenticationToken(request.username(), request.password(), user.getAuthorities()));
 
         List<Token> activeTokens = tokenRepository.findAllByUserAndIsActive(user, true).orElse(Collections.emptyList());
         if (!activeTokens.isEmpty()) {
@@ -58,7 +58,7 @@ public class AuthenticationService {
 
     public JwtAuthenticationResponse refreshToken(RefreshTokenDto request) {
 
-        Token token = tokenRepository.findByRefreshToken(request.getRefreshToken()).orElseThrow(() -> new EntityNotFoundException(request.getRefreshToken()));
+        Token token = tokenRepository.findByRefreshToken(request.refreshToken()).orElseThrow(() -> new EntityNotFoundException(request.refreshToken()));
 
         if (token.getExpiresAt().after(new Date()) && token.getIsActive()) {
             var user = token.getUser();

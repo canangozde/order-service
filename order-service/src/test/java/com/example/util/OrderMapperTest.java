@@ -9,6 +9,7 @@ import com.example.model.Order;
 import com.example.response.OrderResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,16 +22,19 @@ class OrderMapperTest {
 
     @BeforeEach
     void setUp() {
-        orderMapper = new OrderMapper();
+        orderMapper = Mappers.getMapper(OrderMapper.class);
     }
 
     @Test
     void shouldMapOrderDtoToOrder() {
-        OrderDto dto = new OrderDto();
-        dto.setCustomerId(1L);
-        dto.setSide(OrderSide.BUY);
-        dto.setSize(BigDecimal.valueOf(10));
-        dto.setPrice(BigDecimal.valueOf(100));
+        // given
+        OrderDto dto = new OrderDto(
+                1L,
+                "BTC",
+                OrderSide.BUY,
+                BigDecimal.valueOf(10),
+                BigDecimal.valueOf(100)
+        );
 
         Asset asset = new Asset();
         asset.setAssetName("BTC");
@@ -38,8 +42,10 @@ class OrderMapperTest {
         Customer customer = new Customer();
         customer.setId(1L);
 
+        // when
         Order order = orderMapper.toOrder(dto, asset, customer);
 
+        // then
         assertNotNull(order);
         assertEquals(1L, order.getCustomer().getId());
         assertEquals(OrderSide.BUY, order.getOrderSide());
@@ -47,6 +53,7 @@ class OrderMapperTest {
         assertEquals(BigDecimal.valueOf(100), order.getPrice());
         assertEquals(asset, order.getAsset());
     }
+
 
     @Test
     void shouldReturnNullWhenOrderDtoIsNull() {

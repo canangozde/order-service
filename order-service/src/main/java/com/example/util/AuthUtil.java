@@ -19,14 +19,18 @@ public class AuthUtil {
         return ((Customer) getCurrentUser()).getId();
     }
 
+    public boolean isAdminOrAccessingOwnData(Long customerId) {
+        return isAdmin() || isAccessingOwnData(customerId);
+    }
+
     public boolean isAdmin() {
         return getCurrentUser().getAuthorities()
                 .stream()
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + Role.ADMIN.name()));
     }
 
-    public boolean isAdminOrAccessingOwnData(Long customerId) {
-        return isAdmin() || getCustomerId().equals(customerId);
+    public boolean isAccessingOwnData(Long customerId) {
+        return getCustomerId().equals(customerId);
     }
 }
 

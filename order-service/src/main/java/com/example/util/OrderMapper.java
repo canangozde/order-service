@@ -5,34 +5,35 @@ import com.example.model.Asset;
 import com.example.model.Customer;
 import com.example.model.Order;
 import com.example.response.OrderResponse;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class OrderMapper {
+@Mapper(componentModel = "spring")
+public interface OrderMapper {
 
-    public Order toOrder(OrderDto orderDto, Asset asset, Customer customer) {
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "asset", source = "asset")
+    @Mapping(target = "customer", source = "customer")
+    @Mapping(target = "orderSide", source = "orderDto.side")
+    @Mapping(target = "size", source = "orderDto.size")
+    @Mapping(target = "price", source = "orderDto.price")
+    Order toOrderInternal(OrderDto orderDto, Asset asset, Customer customer);
+
+    default Order toOrder(OrderDto orderDto, Asset asset, Customer customer) {
         if (orderDto == null || asset == null || customer == null) {
             return null;
         }
-        return Order.builder()
-                .customer(customer)
-                .asset(asset)
-                .orderSide(orderDto.getSide())
-                .size(orderDto.getSize())
-                .price(orderDto.getPrice())
-                .build();
+        return toOrderInternal(orderDto, asset, customer);
     }
 
-    public OrderResponse fromOrder(Order order) {
-        return OrderResponse.builder()
-                .id(order.getId())
-                .customerId(order.getCustomer().getId())
-                .assetName(order.getAsset().getAssetName())
-                .side(order.getOrderSide())
-                .size(order.getSize())
-                .price(order.getPrice())
-                .status(order.getStatus())
-                .createDate(order.getCreateDate())
-                .build();
-    }
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "customerId", source = "customer.id")
+    @Mapping(target = "assetName", source = "asset.assetName")
+    @Mapping(target = "side", source = "orderSide")
+    @Mapping(target = "size", source = "size")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "createDate", source = "createDate")
+    OrderResponse fromOrder(Order order);
 }
+

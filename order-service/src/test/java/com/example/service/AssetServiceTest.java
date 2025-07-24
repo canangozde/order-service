@@ -11,8 +11,10 @@ import com.example.util.AuthUtil;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
-
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
@@ -45,11 +47,18 @@ class AssetServiceTest {
         MockitoAnnotations.openMocks(this);
     }
 
+    private static final Long CUSTOMER_ID = 1L;
+
+    private List<AssetResponse> callListAssets() {
+        return assetService.listAssets(CUSTOMER_ID, "BTC",
+                new BigDecimal("1"), new BigDecimal("3"),
+                new BigDecimal("1"), new BigDecimal("2"));
+    }
+
     @Test
     void testListAssets_Success() {
-        Long customerId = 1L;
         Customer customer = new Customer();
-        customer.setId(customerId);
+        customer.setId(CUSTOMER_ID);
 
         Asset asset = new Asset();
         asset.setAssetName("BTC");
@@ -61,15 +70,16 @@ class AssetServiceTest {
                 .assetName("BTC")
                 .size(new BigDecimal("2"))
                 .usableSize(new BigDecimal("1.5"))
-                .customerId(customerId)
+                .customerId(CUSTOMER_ID)
                 .build();
 
-        when(authUtil.isAdminOrAccessingOwnData(customerId)).thenReturn(true);
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-        when(assetRepository.getAssetsByCustomerId(customerId)).thenReturn(Optional.of(List.of(asset)));
+        when(authUtil.isAdmin()).thenReturn(true);
+        when(authUtil.isAdminOrAccessingOwnData(CUSTOMER_ID)).thenReturn(true);
+        when(customerRepository.findById(CUSTOMER_ID)).thenReturn(Optional.of(customer));
+        when(assetRepository.findAll(any(Specification.class))).thenReturn(Collections.singletonList(asset));
         when(assetMapper.fromAsset(asset)).thenReturn(response);
 
-        List<AssetResponse> result = assetService.listAssets(customerId);
+        List<AssetResponse> result = callListAssets();
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -78,44 +88,37 @@ class AssetServiceTest {
 
     @Test
     void testListAssets_AccessDenied() {
-        Long customerId = 1L;
-        when(authUtil.isAdminOrAccessingOwnData(customerId)).thenReturn(false);
+        when(authUtil.isAdmin()).thenReturn(false);
+        when(authUtil.isAdminOrAccessingOwnData(CUSTOMER_ID)).thenReturn(false);
+        when(authUtil.getCustomerId()).thenReturn(999L); // Simulate a different customer ID
 
-        assertThrows(AccessDeniedException.class, () -> assetService.listAssets(customerId));
+        assertThrows(AccessDeniedException.class, () ->
+                assetService.listAssets(CUSTOMER_ID, null, null, null, null, null));
+
+        verify(assetRepository, never()).findAll(any(Specification.class));
     }
+
 
     @Test
     void testListAssets_CustomerNotFound() {
-        Long customerId = 1L;
-        when(authUtil.isAdminOrAccessingOwnData(customerId)).thenReturn(true);
-        when(customerRepository.findById(customerId)).thenReturn(Optional.empty());
+        when(authUtil.isAdmin()).thenReturn(true);
+        when(authUtil.isAdminOrAccessingOwnData(CUSTOMER_ID)).thenReturn(true);
+        when(customerRepository.findById(CUSTOMER_ID)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> assetService.listAssets(customerId));
+        assertThrows(EntityNotFoundException.class, () ->
+                assetService.listAssets(CUSTOMER_ID, null, null, null, null, null));
     }
 
     @Test
-    void testListAssets_AssetsEmpty() {
-        Long customerId = 1L;
+    void testListAssets_EmptyAssetList() {
         Customer customer = new Customer();
-        customer.setId(customerId);
+        customer.setId(CUSTOMER_ID);
 
-        when(authUtil.isAdminOrAccessingOwnData(customerId)).thenReturn(true);
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-        when(assetRepository.getAssetsByCustomerId(customerId)).thenReturn(Optional.of(Collections.emptyList()));
+        when(authUtil.isAdmin()).thenReturn(true);
+        when(authUtil.isAdminOrAccessingOwnData(CUSTOMER_ID)).thenReturn(true);
+        when(customerRepository.findById(CUSTOMER_ID)).thenReturn(Optional.of(customer));
+        when(assetRepository.findAll(any(Specification.class))).thenReturn(List.of());
 
-        assertThrows(EntityNotFoundException.class, () -> assetService.listAssets(customerId));
-    }
-
-    @Test
-    void testListAssets_OptionalEmpty() {
-        Long customerId = 1L;
-        Customer customer = new Customer();
-        customer.setId(customerId);
-
-        when(authUtil.isAdminOrAccessingOwnData(customerId)).thenReturn(true);
-        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-        when(assetRepository.getAssetsByCustomerId(customerId)).thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class, () -> assetService.listAssets(customerId));
+        assertThrows(EntityNotFoundException.class, () -> callListAssets());
     }
 }

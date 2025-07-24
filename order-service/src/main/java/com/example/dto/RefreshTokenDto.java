@@ -1,14 +1,13 @@
 package com.example.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class RefreshTokenDto {
-    private String refreshToken;
+public record RefreshTokenDto(
+
+        @NotBlank(message = "Refresh token is required")
+        @JsonProperty("refreshToken")
+        String refreshToken
+
+) {
 }

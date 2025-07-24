@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import static com.example.constants.Constants.REFRESH;
+
 @Service
 @RequiredArgsConstructor
 public class JwtTokenService {
@@ -49,7 +51,7 @@ public class JwtTokenService {
 
 
     public String generateRefreshToken(UserDetails userDetails) {
-        return "REFRESH_" + generateToken(new HashMap<>(), userDetails, refreshTokenExpiration, jwtRefreshSigningKey);
+        return REFRESH + generateToken(new HashMap<>(), userDetails, refreshTokenExpiration, jwtRefreshSigningKey);
     }
 
 
